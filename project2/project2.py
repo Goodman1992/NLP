@@ -2,6 +2,8 @@ import nltk
 import re
 import os
 from beautifultable import BeautifulTable
+global neg_g
+global muti_g
 class file():
     def __init__(self):
         file_name=None
@@ -36,41 +38,75 @@ def file_name_input(prompt):
    else:
       return file_name_input('Enter an existing file path: ')
     
-def file_set_up(file1_path,file2_path):
-    file_1=file()
-    file_2=file()
-    file1_sents_tokenized=[]
-    file2_sents_tokenized=[]
-    file1_name=os.path.splitext(os.path.basename(file1_path))[0]
-    file2_name=os.path.splitext(os.path.basename(file2_path))[0]
-    file1_sents=nltk.sent_tokenize(open(file1_path).read())
-    file2_sents=nltk.sent_tokenize(open(file2_path).read())
-    for index in range(0,len(file1_sents)):
-        file1_sents[index]=file1_sents[index].replace('\n',' ')
-    for index in range(0,len(file2_sents)):
-        file2_sents[index]=file2_sents[index].replace('\n',' ')
-    for item in file1_sents:
-        file1_sents_tokenized.append(trivialTokenizer(item))
-    for item in file2_sents:
-        file2_sents_tokenized.append(trivialTokenizer(item))
-    file_1.file_name=file1_name
-    file_2.file_name=file2_name
-    file_1.sents=file1_sents
-    file_2.sents=file2_sents
-    file_1.sents_tokenized=file1_sents_tokenized
-    file_2.sents_tokenized=file2_sents_tokenized
-    return file_1,file_2
-negationTokens = ['hardly', "n't", 'never', 'no', 'none', 'not', 'nothing', 'nowhere']
-intensifiers=['very','much','extremely','greatly','literally','totally','badly','so','quite']
-
+def file_set_up(file_path):
+    new_file=file()
+    file_sents_tokenized=[]
+    file_name=os.path.splitext(os.path.basename(file_path))[0]
+    file_sents=nltk.sent_tokenize(open(file1_path).read())
+    for index in range(0,len(file_sents)):
+        file_sents[index]=file_sents[index].replace('\n',' ')
+    for item in file_sents:
+        file_sents_tokenized.append(trivialTokenizer(item))
+    new_file.file_name=file_name
+    new_file.sents=file_sents
+    new_file.sents_tokenized=file_sents_tokenized
+    return new_file
+def find_e_word(obj,keys,e_dict):
+    global neg_g
+    global muti_g
+    for index,item in enumerate(obj):
+        for key in keys:
+            if item in e_dict[key]:
+                if index==0:
+                    pass
+                    #increase count of key
+                else:
+                    i=0
+                    j=0
+                    i,j=find_sequence(index-1,obj,negationTokens,intensifiers,0,0,0)
+                    if j!=0 or i!=0:
+                        print(item,' - ',key)
+                        print(obj)
+                        print(neg_g,' - ',muti_g)
+                        neg_g=0
+                        muti_g=0
+                    #call another function
+                    
+def check_before(index):
+    if index-1>=0:
+        return True
+    else:
+        return False
+    
+def find_sequence(index,obj,negationTokens,intensifiers,neg,muti,num):
+    global neg_g
+    global muti_g
+    neg_g=neg
+    muti_g=muti
+    if obj[index] in negationTokens:
+        neg+=1
+        if check_before(index):
+            find_sequence(index-1,obj,negationTokens,intensifiers,neg,muti,num)
+    elif obj[index] in intensifiers:
+        muti+=5
+        if check_before(index):
+            find_sequence(index-1,obj,negationTokens,intensifiers,neg,muti,num)
+    return neg,muti
+        
+negationTokens = ['hardly','never', 'no', "none", 'not', 'nothing', 'nowhere']
+intensifiers=['very','much',"extremely",'greatly','literally','totally','badly','so','quite']
 e_path=directory_input('Please input directory for emotions text files: ')
 e_dict=emotion_group(e_path)
 e_dict_keys=list(e_dict.keys())
 file1_path=file_name_input('Please input path for first file: ')
 file2_path=file_name_input('Please input path for second file: ')
-file_1,file_2=file_set_up(file1_path,file2_path)
-for i in range(0,5):
-    print(file_1.sents_tokenized[i])
+file_1=file_set_up(file1_path)
+file_2=file_set_up(file2_path)
+for item in file_1.sents_tokenized:
+    find_e_word(item,e_dict_keys,e_dict)
+for item in file_2.sents_tokenized:
+    find_e_word(item,e_dict_keys,e_dict)
+print('done')
 
 
 
