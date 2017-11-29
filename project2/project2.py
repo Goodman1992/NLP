@@ -4,6 +4,7 @@ import os
 from beautifultable import BeautifulTable
 global neg_g
 global muti_g
+#using objects to store data
 class file():
     def __init__(self):
         file_name=None
@@ -12,14 +13,14 @@ class file():
 def trivialTokenizer(text):
    pattern = re.compile(r"\d+|Mr\.|Mrs\.|Dr\.|\b[A-Z]\.|[a-zA-Z_]+-[a-zA-Z_]+-[a-zA-Z_]+|[a-zA-Z_]+-[a-zA-Z_]+|[a-zA-Z_]+|--|'s|'t|'d|'ll|'m|'re|'ve|[.,:!?;\"'()\[\]&@#-]")
    return(re.findall(pattern, text))
-
+#use this for directory path for emotions
 def directory_input(prompt):
    path = input(prompt)
    if os.path.isdir(path):
       return path
    else:
       return file_name_input('Enter an existing file directory: ')
-    
+#use this for emotions, tokenize
 def emotion_group(path):
     temp={}
     directory=os.fsencode(path)
@@ -37,7 +38,7 @@ def file_name_input(prompt):
       return path
    else:
       return file_name_input('Enter an existing file path: ')
-    
+#for a signle file, tokenize words by sentence
 def file_set_up(file_path):
     new_file=file()
     file_sents_tokenized=[]
@@ -51,6 +52,7 @@ def file_set_up(file_path):
     new_file.sents=file_sents
     new_file.sents_tokenized=file_sents_tokenized
     return new_file
+#for a given file, if an item is in emotions, check prefixes
 def find_e_word(obj,keys,e_dict):
     global neg_g
     global muti_g
@@ -59,10 +61,12 @@ def find_e_word(obj,keys,e_dict):
             if item in e_dict[key]:
                 if index==0:
                     pass
+                    #definitly positive emotion
                     #increase count of key
                 else:
                     i=0
                     j=0
+                    #have problem with recursive function, using global var as alternative
                     i,j=find_sequence(index-1,obj,negationTokens,intensifiers,0,0,0)
                     if j!=0 or i!=0:
                         print(item,' - ',key)
@@ -70,27 +74,31 @@ def find_e_word(obj,keys,e_dict):
                         print(neg_g,' - ',muti_g)
                         neg_g=0
                         muti_g=0
-                    #call another function
-                    
+                    #possibly assign those value into file object or 
+#depends on index, check if it is at beginning of file
 def check_before(index):
     if index-1>=0:
         return True
     else:
         return False
-    
+#body of recursive function
 def find_sequence(index,obj,negationTokens,intensifiers,neg,muti,num):
+    #assign current neg and muti to global var
     global neg_g
     global muti_g
     neg_g=neg
     muti_g=muti
+    #determine negetivity of emotion by neg%2
     if obj[index] in negationTokens:
         neg+=1
         if check_before(index):
             find_sequence(index-1,obj,negationTokens,intensifiers,neg,muti,num)
+    #determine how strong the emotion by muti 
     elif obj[index] in intensifiers:
         muti+=5
         if check_before(index):
             find_sequence(index-1,obj,negationTokens,intensifiers,neg,muti,num)
+    #can do more if specfic prefix is required
     return neg,muti
         
 negationTokens = ['hardly','never', 'no', "none", 'not', 'nothing', 'nowhere']
